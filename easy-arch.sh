@@ -131,12 +131,12 @@ btrfs su cr /mnt/@var_log &>/dev/null
 umount /mnt
 echo "Mounting the newly created subvolumes."
 mount -o ssd,noatime,space_cache,compress=zstd,subvol=@ $BTRFS /mnt
-mkdir -p /mnt/{home,.snapshots,/var/log,boot}
+mkdir -p /mnt/{home,.snapshots,/var/log,boot/efi}
 mount -o ssd,noatime,space_cache,compress=zstd,autodefrag,discard=async,subvol=@home $BTRFS /mnt/home
 mount -o ssd,noatime,space_cache,compress=zstd,autodefrag,discard=async,subvol=@snapshots $BTRFS /mnt/.snapshots
 mount -o ssd,noatime,space_cache,compress=zstd,autodefrag,discard=async,subvol=@var_log $BTRFS /mnt/var/log
 chattr +C /mnt/var/log
-mount $ESP /mnt/boot/
+mount $ESP /mnt/boot/efi
 
 kernel_selector
 
@@ -206,8 +206,8 @@ arch-chroot /mnt /bin/bash -e <<EOF
     chmod 750 /.snapshots
 
     # Installing GRUB.
-    echo "Installing GRUB on /boot."
-    grub-install --target=x86_64-efi --efi-directory=/boot/ --bootloader-id=GRUB &>/dev/null
+    echo "Installing GRUB on /boot/efi."
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB &>/dev/null
     
     # Creating grub config file.
     echo "Creating GRUB config file."
@@ -218,10 +218,6 @@ EOF
 # Setting root password.
 echo "Setting root password."
 arch-chroot /mnt /bin/passwd
-
-# Enabling Reflector timer.
-echo "Enabling Reflector."
-systemctl enable reflector.timer --root=/mnt &>/dev/null
 
 # Enabling Snapper automatic snapshots.
 echo "Enabling Snapper and automatic snapshots entries."
