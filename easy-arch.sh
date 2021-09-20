@@ -109,11 +109,11 @@ echo "Formatting the EFI Partition as FAT32."
 mkfs.fat -F 32 $ESP &>/dev/null
 
 # Creating a LUKS Container for the root partition.
-echo "Creating LUKS Container for the root partition"
-cryptsetup luksFormat $Cryptroot
-echo "Opening the newly created LUKS Container."
-cryptsetup open $Cryptroot cryptroot
-BTRFS="/dev/mapper/cryptroot"
+# echo "Creating LUKS Container for the root partition"
+# cryptsetup luksFormat $Cryptroot
+# echo "Opening the newly created LUKS Container."
+# cryptsetup open $Cryptroot cryptroot
+# BTRFS="/dev/mapper/cryptroot"
 
 # Formatting the LUKS Container as BTRFS.
 echo "Formatting the LUKS container as BTRFS."
@@ -170,14 +170,6 @@ cat > /mnt/etc/hosts <<EOF
 ::1         localhost
 127.0.1.1   $hostname.localdomain   $hostname
 EOF
-
-# Configuring /etc/mkinitcpio.conf.
-echo "Configuring /etc/mkinitcpio.conf for LUKS hook."
-sed -i -e 's,modconf block filesystems keyboard,keyboard keymap modconf block encrypt filesystems,g' /mnt/etc/mkinitcpio.conf
-
-# Setting up LUKS2 encryption and apparmor.
-UUID=$(blkid $Cryptroot | cut -f2 -d'"')
-sed -i "s/quiet/quiet cryptdevice=UUID=$UUID:cryptroot root=$BTRFS/g" /mnt/etc/default/grub
 
 # Configuring the system.    
 arch-chroot /mnt /bin/bash -e <<EOF
