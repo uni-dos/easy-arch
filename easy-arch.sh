@@ -68,6 +68,9 @@ else
     microcode=intel-ucode
 fi
 
+#ensure the system clock is accurate
+timedatectl set-ntp true
+
 # Selecting the target for the installation.
 PS3="Select the disk where Arch Linux is going to be installed: "
 select ENTRY in $(lsblk -dpnoNAME|grep -P "/dev/sd|nvme|vd");
@@ -130,11 +133,11 @@ btrfs su cr /mnt/@var_log &>/dev/null
 # Mounting the newly created subvolumes.
 umount /mnt
 echo "Mounting the newly created subvolumes."
-mount -o ssd,noatime,space_cache,compress=zstd,subvol=@ $BTRFS /mnt
+mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@ $BTRFS /mnt
 mkdir -p /mnt/{home,.snapshots,/var/log,boot/efi}
-mount -o ssd,noatime,space_cache,compress=zstd,autodefrag,discard=async,subvol=@home $BTRFS /mnt/home
-mount -o ssd,noatime,space_cache,compress=zstd,autodefrag,discard=async,subvol=@snapshots $BTRFS /mnt/.snapshots
-mount -o ssd,noatime,space_cache,compress=zstd,autodefrag,discard=async,subvol=@var_log $BTRFS /mnt/var/log
+mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@home $BTRFS /mnt/home
+mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@snapshots $BTRFS /mnt/.snapshots
+mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@var_log $BTRFS /mnt/var/log
 chattr +C /mnt/var/log
 mount $ESP /mnt/boot/efi
 
