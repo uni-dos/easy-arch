@@ -98,10 +98,10 @@ parted -s "$DISK" \
     mklabel gpt \
     mkpart ESP fat32 1MiB 301MiB \
     set 1 esp on \
-    mkpart Cryptroot 301MiB 100% \
+    mkpart Root 301MiB 100% \
 
 ESP="/dev/disk/by-partlabel/ESP"
-Cryptroot="/dev/disk/by-partlabel/Cryptroot"
+ROOT="/dev/disk/by-partlabel/Root"
 
 # Informing the Kernel of the changes.
 echo "Informing the Kernel about the disk changes."
@@ -111,17 +111,10 @@ partprobe "$DISK"
 echo "Formatting the EFI Partition as FAT32."
 mkfs.fat -F 32 $ESP &>/dev/null
 
-# Creating a LUKS Container for the root partition.
-# echo "Creating LUKS Container for the root partition"
-# cryptsetup luksFormat $Cryptroot
-# echo "Opening the newly created LUKS Container."
-# cryptsetup open $Cryptroot cryptroot
-# BTRFS="/dev/mapper/cryptroot"
-
-# Formatting the LUKS Container as BTRFS.
+# Formatting ROOT as BTRFS.
 echo "Formatting the LUKS container as BTRFS."
-mkfs.btrfs $BTRFS &>/dev/null
-mount $BTRFS /mnt
+mkfs.btrfs $ROOT &>/dev/null
+mount $ROOT /mnt
 
 # Creating BTRFS subvolumes.
 echo "Creating BTRFS subvolumes."
@@ -133,19 +126,21 @@ btrfs su cr /mnt/@var_log &>/dev/null
 # Mounting the newly created subvolumes.
 umount /mnt
 echo "Mounting the newly created subvolumes."
-mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@ $BTRFS /mnt
-mkdir -p /mnt/{home,.snapshots,/var/log,boot/efi}
-mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@home $BTRFS /mnt/home
-mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@snapshots $BTRFS /mnt/.snapshots
-mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@var_log $BTRFS /mnt/var/log
+mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@ $ROOT /mnt
+mkdir -p /mnt/{home,.snapshots,/var/log,/boot/efi}
+mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@home $ROOT /mnt/home
+mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@snapshots $ROOT /mnt/.snapshots
+mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@var_log $ROOT /mnt/var/log
 chattr +C /mnt/var/log
+
+# Mounting the boot partition
 mount $ESP /mnt/boot/efi
 
 kernel_selector
 
 # Pacstrap (setting up a base sytem onto the new root).
 echo "Installing the base system (it may take a while)."
-pacstrap /mnt base $kernel $microcode linux-firmware btrfs-progs grub grub-btrfs efibootmgr snapper reflector base-devel snap-pac zram-generator
+pacstrap /mnt base $kernel $microcode linux-firmware btrfs-progs grub grub-btrfs efibootmgr snapper base-devel snap-pac zram-generator
 
 network_selector
 
