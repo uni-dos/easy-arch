@@ -154,7 +154,7 @@ mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@var $ROOT /mnt/var
 chattr +C /mnt/var
 
 # Mounting the boot partition
-mount $ESP /mnt/boot/efi
+mount $ESP /mnt/boot/
 
 # Prompt user to choose a kernel and text editor
 kernel_selector
@@ -218,8 +218,8 @@ arch-chroot /mnt /bin/bash -e <<EOF
     chmod 750 /.snapshots
 
     # Installing GRUB.
-    echo "Installing GRUB on /boot/efi."
-    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB &>/dev/null
+    echo "Installing GRUB on /boot."
+    grub-install --target=x86_64-efi --efi-directory=/boot/ --bootloader-id=GRUB &>/dev/null
     
     # Creating grub config file.
     echo "Creating GRUB config file."
