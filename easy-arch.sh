@@ -59,6 +59,26 @@ network_selector () {
     esac
 }
 
+# Text editor selector
+text_editor_selector () {
+    echo "Text editors:"
+    echo "1) Neovim — Vim's rebirth for the 21st century."
+    echo "2) Vim — Advanced text editor that seeks to provide the power of the de-facto Unix editor 'vi', with a more complete feature set."
+    echo "3) Nano — Console text editor based on pico with on-screen key bindings help."
+    read -r -p "Insert the number of the corresponding text editor: " choice
+    echo "$choice will be installed"
+    case $choice in
+        1 ) editor=neovim
+            ;;
+        2 ) editor=vim
+            ;;
+        3 ) editor=nano
+            ;;
+        * ) echo "You did not enter a valid selection."
+            text_editor_selector
+    esac
+}
+
 # Checking the microcode to install.
 CPU=$(grep vendor_id /proc/cpuinfo)
 if [[ $CPU == *"AuthenticAMD"* ]]
@@ -121,26 +141,28 @@ echo "Creating BTRFS subvolumes."
 btrfs su cr /mnt/@ &>/dev/null
 btrfs su cr /mnt/@home &>/dev/null
 btrfs su cr /mnt/@snapshots &>/dev/null
-btrfs su cr /mnt/@var_log &>/dev/null
+btrfs su cr /mnt/@var &>/dev/null
 
 # Mounting the newly created subvolumes.
 umount /mnt
 echo "Mounting the newly created subvolumes."
 mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@ $ROOT /mnt
-mkdir -p /mnt/{home,.snapshots,/var/log,/boot/efi}
+mkdir -p /mnt/{home,.snapshots,var,/boot/efi}
 mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@home $ROOT /mnt/home
 mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@snapshots $ROOT /mnt/.snapshots
-mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@var_log $ROOT /mnt/var/log
-chattr +C /mnt/var/log
+mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@var $ROOT /mnt/var
+chattr +C /mnt/var
 
 # Mounting the boot partition
 mount $ESP /mnt/boot/efi
 
+# Prompt user to choose a kernel and text editor
 kernel_selector
+text_editor_selector
 
 # Pacstrap (setting up a base sytem onto the new root).
 echo "Installing the base system (it may take a while)."
-pacstrap /mnt base $kernel $microcode linux-firmware btrfs-progs grub grub-btrfs efibootmgr snapper base-devel snap-pac zram-generator
+pacstrap /mnt base $kernel $microcode linux-firmware $editor btrfs-progs grub grub-btrfs efibootmgr snapper base-devel snap-pac zram-generator
 
 network_selector
 
