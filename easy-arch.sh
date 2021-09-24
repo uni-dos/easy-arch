@@ -162,7 +162,7 @@ text_editor_selector
 
 # Pacstrap (setting up a base sytem onto the new root).
 echo "Installing the base system (it may take a while)."
-pacstrap /mnt base $kernel $microcode linux-firmware $editor btrfs-progs grub grub-btrfs efibootmgr snapper base-devel snap-pac zram-generator zsh zsh-completions
+pacstrap /mnt base $kernel $microcode linux-firmware $editor btrfs-progs grub grub-btrfs efibootmgr snapper base-devel snap-pac zram-generator zsh zsh-completions git
 
 network_selector
 
@@ -171,7 +171,7 @@ echo "Generating a new fstab."
 genfstab -U /mnt >> /mnt/etc/fstab
 
 # Setting hostname.
-read -r -p "Please enter the hostname: " hostname
+read -r -p "What would you like to name your PC? " hostname
 echo "$hostname" > /mnt/etc/hostname
 
 # Setting up locales.
@@ -240,7 +240,8 @@ arch-chroot /mnt /bin/bash -e <<EOF
         read -p "Press enter to do so"
         EDITOR=$editor visudo
     fi
-
+    echo "$user now has sudo privilages."
+    
 EOF
 
 # Enabling Snapper automatic snapshots.
