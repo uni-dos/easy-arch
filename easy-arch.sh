@@ -116,9 +116,9 @@ fi
 echo "Creating new partition scheme on $DISK."
 parted -s "$DISK" \
     mklabel gpt \
-    mkpart ESP fat32 1MiB 301MiB \
+    mkpart ESP fat32 1MiB 513MiB \
     set 1 esp on \
-    mkpart Root 301MiB 100% \
+    mkpart Root 513MiB 100% \
 
 ESP="/dev/disk/by-partlabel/ESP"
 ROOT="/dev/disk/by-partlabel/Root"
@@ -154,7 +154,7 @@ mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@var $ROOT /mnt/var
 chattr +C /mnt/var
 
 # Mounting the boot partition
-mount $ESP /mnt/boot/
+mount $ESP /mnt/boot/efi
 
 # Prompt user to choose a kernel and text editor
 kernel_selector
@@ -162,7 +162,7 @@ text_editor_selector
 
 # Pacstrap (setting up a base sytem onto the new root).
 echo "Installing the base system (it may take a while)."
-pacstrap /mnt base $kernel $microcode linux-firmware $editor btrfs-progs grub grub-btrfs efibootmgr snapper base-devel snap-pac zram-generator
+pacstrap /mnt base $kernel $microcode linux-firmware $editor btrfs-progs grub grub-btrfs efibootmgr snapper base-devel snap-pac zram-generator zsh zsh-completions
 
 network_selector
 
@@ -176,7 +176,7 @@ echo "$hostname" > /mnt/etc/hostname
 
 # Setting up locales.
 read -r -p "Please insert the locale you use (format: xx_XX): " locale
-echo "$locale.UTF-8 UTF-8"  > /mnt/etc/locale.gen
+sed -i "s/#$locale.UTF-8 UTF-8/$locale.UTF-8 UTF-8/" /mnt/etc/locale.gen
 echo "LANG=$locale.UTF-8" > /mnt/etc/locale.conf
 
 # Setting up keyboard layout.
@@ -218,18 +218,30 @@ arch-chroot /mnt /bin/bash -e <<EOF
     chmod 750 /.snapshots
 
     # Installing GRUB.
-    echo "Installing GRUB on /boot."
-    grub-install --target=x86_64-efi --efi-directory=/boot/ --bootloader-id=GRUB &>/dev/null
+    echo "Installing GRUB on /boot/efi."
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi/ --bootloader-id=GRUB &>/dev/null
     
     # Creating grub config file.
     echo "Creating GRUB config file."
-    grub-mkconfig -o /boot/grub/grub.cfg &>/dev/null
+    grub-mkconfig -o /boot/efi/grub/grub.cfg &>/dev/null
+
+    # Setting root password.
+    echo "Setting root password."
+    passwd
+
+    # Creating user and adding them to the wheel group
+    read -r -p "Please enter a name to create a user account or leave empty for no user: " user
+    if [ -n "$user" ]
+        echo "Adding $user to wheel group."
+        useradd -mG wheel $user -s /bin/zsh
+        echo "Please type a password for $user"
+        passwd $user
+        echo "To give $user sudo privilages, please uncomment # %wheel ALL=(ALL) ALL"
+        read -p "Press enter to do so"
+        EDITOR=$editor visudo
+    fi
 
 EOF
-
-# Setting root password.
-echo "Setting root password."
-arch-chroot /mnt /bin/passwd
 
 # Enabling Snapper automatic snapshots.
 echo "Enabling Snapper and automatic snapshots entries."
@@ -250,4 +262,5 @@ EOF
 
 # Finishing up
 echo "Done, you may now wish to reboot (further changes can be done by chrooting into /mnt)."
+umount -R /mnt
 exit
