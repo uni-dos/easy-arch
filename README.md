@@ -1,8 +1,6 @@
-![](https://api.codeclimate.com/v1/badges/a99a88d28ad37a79dbf6/test_coverage)
-![](https://img.shields.io/github/license/classy-giraffe/easy-arch)
-
 ### Introduction
-[easy-arch](https://github.com/classy-giraffe/easy-arch) is a **script** made in order to boostrap a basic **Arch Linux** environment with **snapshots** and **encryption** by using a fully automated process (UEFI only).
+[easy-arch](https://github.com/uni-dos/easy-arch) is a **script** that boostrap a basic **Arch Linux** environment with **BTRFS snapshots** by using a fully automated process (UEFI only).
+Special thanks to [classy-giraffe](https://github.com/classy-giraffe) for creating this script.
 
 ### How does it work?
 1. Download an Arch Linux ISO from [here](https://archlinux.org/download/)
@@ -10,18 +8,15 @@
 3. Boot the live environment.
 4. Set the keyboard layout by using `loadkeys`.
 5. Connect to the internet.
-6. Run this `bash <(curl -sL git.io/JtRu2)`.
+6. git clone https://github.com/uni-dos/easy-arch.
+7. Type ./easy-arch/easy-arch.sh to run the install script.
 
 ### Partitions layout 
 
 | Partition Number | Label     | Size              | Mountpoint     | Filesystem              |
 |------------------|-----------|-------------------|----------------|-------------------------|
-| 1                | ESP       | 512 MiB           | /boot/         | FAT32                   |
-| 2                | Cryptroot | Rest of the disk  | /              | BTRFS Encrypted (LUKS2) |
-
-The **partitions layout** is pretty straightforward, it's inspired by [this section](https://wiki.archlinux.org/index.php/Dm-crypt/Encrypting_an_entire_system#Btrfs_subvolumes_with_swap) of the Arch Wiki. As you can see there's just a couple of partitions:
-1. A **FAT32**, 512MiB sized, mounted at `/boot/efi` for the ESP.
-2. A **LUKS2 encrypted container**, which takes the rest of the disk space, mounted at `/` for the rootfs.
+| 1                | ESP       | 512 MiB           | /boot/efi      | FAT32                   |
+| 2                | Root      | Rest of the disk  | /              | BTRFS                   |
 
 ### BTRFS subvolumes layout
 
@@ -30,10 +25,4 @@ The **partitions layout** is pretty straightforward, it's inspired by [this sect
 | 1                | @              | /                |
 | 2                | @home          | /home            |
 | 3                | @snapshots     | /.snapshots      |
-| 4                | @var_log       | /var/log         |
-
-The **BTRFS subvolumes layout** follows the traditional and suggested layout used by **Snapper**, you can find it [here](https://wiki.archlinux.org/index.php/Snapper#Suggested_filesystem_layout). Here's a brief explanation of the **BTRFS layout** I chose:
-1. `@` mounted at `/`.
-2. `@home` mounted at `/home`.
-3. `@snapshots` mounted at `/.snapshots`.
-4. `@var_log` mounted at `/var/log`.
+| 4                | @var           | /var             |
