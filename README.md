@@ -15,7 +15,7 @@ Special thanks to [classy-giraffe](https://github.com/classy-giraffe) for creati
 
 | Partition Number | Label     | Size              | Mountpoint     | Filesystem              |
 |------------------|-----------|-------------------|----------------|-------------------------|
-| 1                | ESP       | 512 MiB           | /boot/efi      | FAT32                   |
+| 1                | ESP       | 512 MiB           | /boot          | FAT32                   |
 | 2                | Root      | Rest of the disk  | /              | BTRFS                   |
 
 ### BTRFS subvolumes layout
