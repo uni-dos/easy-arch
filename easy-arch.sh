@@ -147,14 +147,14 @@ btrfs su cr /mnt/@var &>/dev/null
 umount /mnt
 echo "Mounting the newly created subvolumes."
 mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@ $ROOT /mnt
-mkdir -p /mnt/{home,.snapshots,var,/boot/efi}
+mkdir -p /mnt/{home,.snapshots,var,boot}
 mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@home $ROOT /mnt/home
 mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@snapshots $ROOT /mnt/.snapshots
 mount -o ssd,noatime,space_cache=v2,compress=zstd,subvol=@var $ROOT /mnt/var
 chattr +C /mnt/var
 
 # Mounting the boot partition
-mount $ESP /mnt/boot/efi
+mount $ESP /mnt/boot/
 
 # Prompt user to choose a kernel and text editor
 kernel_selector
@@ -218,12 +218,12 @@ arch-chroot /mnt /bin/bash -e <<EOF
     chmod 750 /.snapshots
 
     # Installing GRUB.
-    echo "Installing GRUB on /boot/efi."
-    grub-install --target=x86_64-efi --efi-directory=/boot/efi/ --bootloader-id=GRUB &>/dev/null
+    echo "Installing GRUB on /boot/."
+    grub-install --target=x86_64-efi --efi-directory=/boot/ --bootloader-id=GRUB &>/dev/null
     
     # Creating grub config file.
     echo "Creating GRUB config file."
-    grub-mkconfig -o /boot/efi/grub/grub.cfg &>/dev/null
+    grub-mkconfig -o /boot/grub/grub.cfg &>/dev/null
 
     # Setting root password.
     echo "Setting root password."
