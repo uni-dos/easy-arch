@@ -118,10 +118,10 @@ parted -s "$DISK" \
     mklabel gpt \
     mkpart ESP fat32 1MiB 513MiB \
     set 1 esp on \
-    mkpart Root 513MiB 100% \
-
+    mkpart ROOT 513MiB 100% \
+# issue might be here
 ESP="/dev/disk/by-partlabel/ESP"
-ROOT="/dev/disk/by-partlabel/Root"
+ROOT="/dev/disk/by-partlabel/ROOT"
 
 # Informing the Kernel of the changes.
 echo "Informing the Kernel about the disk changes."
